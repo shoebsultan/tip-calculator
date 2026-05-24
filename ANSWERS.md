@@ -2,25 +2,35 @@
 
 ## Q1 — How to run
 
-No build step or package manager needed.
+### Live deployed URL
+**https://tip-calculator-azure-two.vercel.app**
 
-**Simplest:**
+### Run locally
+
+Requires Node.js ≥ 16 ([nodejs.org](https://nodejs.org)).
+
 ```bash
-open index.html          # macOS
-start index.html         # Windows
-xdg-open index.html      # Linux
+# 1. Install dependencies
+npm install
+
+# 2. Start the dev server
+npm run dev
+# → http://localhost:5173
 ```
 
-**With a local server (avoids any browser file:// quirks):**
+### Production build
+
 ```bash
-npx serve .              # Node.js required — auto-installs serve
-# → http://localhost:3000
+npm run build    # outputs to dist/
+npm run preview  # preview the build locally
 ```
 
-Or Python (no install):
+### Deploy to Vercel
+
 ```bash
-python3 -m http.server 8080
-# → http://localhost:8080
+npm install -g vercel
+vercel --prod
+# Uses vercel.json — zero config needed
 ```
 
 Tested in Chrome 124, Firefox 126, Safari 17, Edge 124.
