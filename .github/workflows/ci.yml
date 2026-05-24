@@ -1,0 +1,88 @@
+# CI — Pull Request Checks
+#
+# Runs on every PR targeting master.
+# A PR must pass ALL of these checks before it is eligible to merge.
+#
+# Jobs:
+#   lint-and-build — validates the code compiles cleanly (no silent JS errors)
+#   build-size     — reports bundle size so reviewers catch regressions
+
+name: CI — PR Checks
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true   # cancel old runs when a new commit is pushed to the same PR
+
+jobs:
+  # ─────────────────────────────────────────
+  # Job 1: Install, Build, Verify
+  # ─────────────────────────────────────────
+  lint-and-build:
+    name: Build & Verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (Vite production)
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Verify dist output exists
+        run: |
+          test -f dist/index.html || (echo "dist/index.html missing!" && exit 1)
+          echo "✅ Build output verified"
+
+  # ─────────────────────────────────────────
+  # Job 2: Bundle size report (informational)
+  # ─────────────────────────────────────────
+  bundle-size:
+    name: Bundle Size Report
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Report bundle sizes
+        run: |
+          echo "## 📦 Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size | Gzipped |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|---------|" >> $GITHUB_STEP_SUMMARY
+          find dist/assets -name "*.js" -o -name "*.css" | sort | while read f; do
+            size=$(du -sh "$f" | cut -f1)
+            gz=$(gzip -c "$f" | wc -c | awk '{printf "%.1fK", $1/1024}')
+            echo "| $(basename $f) | $size | $gz |" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Build successful" >> $GITHUB_STEP_SUMMARY

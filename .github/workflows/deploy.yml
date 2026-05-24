@@ -1,0 +1,76 @@
+# Deploy — Production
+#
+# Triggers ONLY when code is merged (pushed) to master.
+# This job will NEVER run directly from a feature branch.
+#
+# Flow:
+#   feature/* → PR → CI checks pass → code review → squash merge to master
+#   → this workflow fires → Vite build → Vercel production deploy
+#
+# Required GitHub repository secrets:
+#   VERCEL_TOKEN      — Personal access token from vercel.com/account/tokens
+#   VERCEL_ORG_ID     — From .vercel/project.json  (orgId field)
+#   VERCEL_PROJECT_ID — From .vercel/project.json  (projectId field)
+
+name: Deploy — Production
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false   # never cancel a running production deploy
+
+jobs:
+  deploy:
+    name: Build & Deploy to Vercel
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://tip-calculator-azure-two.vercel.app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (Vite production)
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Verify dist output
+        run: |
+          test -f dist/index.html || (echo "❌ dist/index.html missing" && exit 1)
+          echo "✅ Build output verified"
+
+      - name: Deploy to Vercel (production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+
+      - name: Post deployment summary
+        run: |
+          echo "## 🚀 Production Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **URL** | https://tip-calculator-azure-two.vercel.app |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | master |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Triggered by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployed successfully" >> $GITHUB_STEP_SUMMARY
