@@ -1,77 +1,110 @@
 # SplitWise — Tip Calculator & Bill Splitter
 
-A polished, zero-dependency tip calculator and bill splitter built with vanilla HTML, CSS, and JavaScript. Updates live as you type — no "Calculate" button needed.
+A polished, real-time tip calculator and bill splitter built with **React + Vite**. Updates live as you type — no "Calculate" button needed.
 
 ## Live Demo
 
-Open `index.html` directly in any modern browser — no build step, no server required.
+Deploy to Vercel in one command (see Deployment section below).
 
 ## Running Locally
 
-### Option 1 — Direct file open (simplest)
+### Requirements
+- Node.js ≥ 16 ([nodejs.org](https://nodejs.org))
+
+### Steps
 
 ```bash
-# macOS
-open index.html
+# 1. Clone / navigate to the project directory
+cd tip-calculator
 
-# Windows
-start index.html
+# 2. Install dependencies
+npm install
 
-# Linux
-xdg-open index.html
+# 3. Start the dev server
+npm run dev
+# → Open http://localhost:5173
 ```
 
-### Option 2 — Local dev server (recommended for consistent behaviour)
-
-Requires Node.js ≥ 16 installed ([nodejs.org](https://nodejs.org)).
+### Production build
 
 ```bash
-# Install a lightweight static server once
-npm install -g serve
-
-# Serve the app
-serve .
-# → Open http://localhost:3000
+npm run build     # outputs to dist/
+npm run preview   # serve the built output locally
 ```
 
-Or with Python (comes pre-installed on macOS/Linux):
+## Deploying to Vercel
+
+### Option A — Vercel CLI (recommended)
 
 ```bash
-python3 -m http.server 8080
-# → Open http://localhost:8080
+# Install Vercel CLI once
+npm install -g vercel
+
+# Deploy from project root
+vercel
+
+# For production
+vercel --prod
 ```
 
-### Option 3 — VS Code Live Server
+The `vercel.json` at the project root configures the build automatically:
+- **Build command**: `npm run build`
+- **Output directory**: `dist`
+- **Framework**: `vite`
+- **SPA rewrites**: all routes → `index.html`
 
-Install the **Live Server** extension, right-click `index.html` → **Open with Live Server**.
+### Option B — Vercel Dashboard
+
+1. Push this repo to GitHub
+2. Go to [vercel.com/new](https://vercel.com/new)
+3. Import the repo — Vercel auto-detects Vite, no config needed
+4. Click **Deploy** ✅
 
 ## Project Structure
 
 ```
 tip-calculator/
-├── index.html   # Semantic HTML, ARIA labels, meta tags
-├── style.css    # Design tokens, glassmorphism theme, responsive layout
-├── app.js       # All calculation logic, validation, interaction
-├── README.md    # This file
-└── ANSWERS.md   # Assessment Q&A
+├── index.html                    # Vite HTML entry
+├── vite.config.js                # Vite + React plugin
+├── vercel.json                   # Zero-config Vercel deployment
+├── package.json
+├── src/
+│   ├── main.jsx                  # React root
+│   ├── App.jsx                   # Layout orchestrator
+│   ├── index.css                 # Global design system (CSS tokens)
+│   ├── hooks/
+│   │   └── useCalculator.js      # All state, validation, computed values
+│   ├── utils/
+│   │   ├── validate.js           # Pure validation functions
+│   │   └── calculate.js          # Ceil rounding, formatCurrency, computeResults
+│   └── components/
+│       ├── Header.jsx
+│       ├── Footer.jsx
+│       ├── InputPanel/
+│       │   ├── index.jsx         # Panel container
+│       │   ├── BillInput.jsx     # Currency input + paste sanitise
+│       │   ├── TipSelector.jsx   # Presets (aria-pressed) + custom input
+│       │   └── PeopleStepper.jsx # +/- with hold-to-repeat
+│       └── OutputPanel/
+│           ├── index.jsx         # Panel container
+│           ├── HeroCard.jsx      # Per-person hero with pop animation
+│           ├── ResultRow.jsx     # Reusable breakdown row
+│           └── RoundingNote.jsx  # Amber ceiling disclosure
+├── README.md
+└── ANSWERS.md
 ```
 
 ## Features
 
-- **Live calculation** — results update on every keystroke
-- **Preset tip buttons** — 10 / 15 / 20 / 25 % with active state
-- **Custom tip** — free-form input; clears preset highlight when used
-- **People stepper** — +/− buttons with hold-to-repeat, arrow-key support
-- **Inline validation** — animated errors per field, never `window.alert`
-- **Rounding policy** — ceiling to 2 decimal places (the group never underpays)
-- **Rounding disclosure** — visible note when rounding adds overage
-- **Reset button** — single click returns to clean state, focus returns to bill field
-- **Keyboard nav** — Enter advances focus through fields, full tab order
-- **Indian Rupee formatting** — lakhs/crores via `toLocaleString('en-IN')`
-- **Responsive** — two-column on desktop, stacked on mobile (≤ 780 px)
-- **Reduced motion** — respects `prefers-reduced-motion`
-- **No dependencies** — zero npm packages, zero build tools
-
-## Currency
-
-Indian Rupees (₹). Change the `CURRENCY` constant in `app.js` and the `currency-symbol` span in `index.html` to switch.
+- **Live calculation** — `useMemo` recomputes on every keystroke
+- **Preset tip buttons** — 10 / 15 / 20 / 25 % with `aria-pressed` active state
+- **Custom tip** — free-form; clears preset highlight when used
+- **People stepper** — +/− buttons with hold-to-repeat, `ArrowUp`/`ArrowDown` support
+- **Inline validation** — per-field animated errors, never `window.alert`
+- **Rounding policy** — `Math.ceil` to nearest paise (group never underpays)
+- **Rounding disclosure** — amber note with exact overage when ceiling applies
+- **Reset** — single click, focus returns to bill input
+- **Indian Rupee formatting** — `toLocaleString('en-IN')`
+- **Responsive** — two-column desktop → stacked mobile (≤ 780 px)
+- **Reduced motion** — `prefers-reduced-motion` respected
+- **Zero runtime dependencies** beyond React itself
