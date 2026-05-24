@@ -189,11 +189,11 @@ To enable the production deploy workflow, add these three secrets to your GitHub
 | `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` field |
 | `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` field |
 
-Your `.vercel/project.json` values:
+Your `.vercel/project.json` values will look something like this once you run `vercel link`:
 ```json
 {
-  "projectId": "prj_YFn1V0Z7tXHaf5QBrZFGNSlqAYNj",
-  "orgId":     "team_4o9fBdkEsXDjekiTQBjXJ5uS"
+  "projectId": "prj_XXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "orgId":     "team_XXXXXXXXXXXXXXXXXXXXXXXXX"
 }
 ```
 
